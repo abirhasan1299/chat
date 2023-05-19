@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chating</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.4/font/bootstrap-icons.css">
+</head>
+<style>
+body{
+    font-family:consolas;
+    background:#334155;
+}
+#chat-log{
+    background:#fed7aa;
+    height:400px; 
+    width:30%;
+    color:white;
+    overflow:scroll;
+    width:50%;
+}
+#chat{
+    padding:10px;
+    background:grey;
+    border-radius:10px;
+   
+    margin-top:5px;
+    margin-left:2px;
+    margin-right:2px;
+}
+.container{
+    height:100vh;
+}
+#form input[type='text']{
+    border:2px solid green;
+}
+</style>
+<body>
+<div class="container bg-light">
+     <div class="row bg-primary p-3">
+        <h1 style="text-align:center;">{{room.name}}</h1>
+    </div>
+   <div class="d-flex justify-content-around"> 
+        <div  id="chat-log">
+            
+                {% for m in message %}
+                <div id="chat">         
+                    <b>{{m.text}}</b><br>    
+                </div>
+                {% endfor %}
+
+        </div>
+    </div>
+    <br>
+   <div class="d-flex justify-content-around" id="form">
+    <div class="d-flex justify-content-between">
+        <input id="chat-message-input" class="form-control" size="50" type="text" placeholder="Write Message Here">
+        <input id="chat-message-submit" class="btn btn-danger" type="button" value="Send">
+    </div>
+   </div>
+
+    {{ room_name|json_script:"room-name" }}
+</div>
+    <script>
+        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/'
+            + roomName
+            + '/'
+        );
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if(data.message){
+                document.querySelector('#chat-log').innerHTML += ('<div id="chat"><b>'+data.message+'</b></div>');
+            }else{
+                alert("empty message");
+            }
+            scrollToBottom();
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'room':roomName
+            }));
+            messageInputDom.value = '';
+        };
+        function scrollToBottom() {
+        let objDiv = document.getElementById("chat-log");
+        objDiv.scrollTop = objDiv.scrollHeight;
+    }
+    scrollToBottom();
+    </script>
+    
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
+</body>
+</html>
