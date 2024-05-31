@@ -1,1 +1,1 @@
-Django Realtime Chat Application for Commucation to each other like ROOM and Personal Chat Inbox system.
+Django Realtime Chat Application for Communication to each other like ROOM and Personal Chat Inbox system.
